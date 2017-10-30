@@ -1,0 +1,10 @@
+"..\output\STARTUP.obj",
+"..\output\main.obj",
+"..\output\Delay.obj",
+"..\output\Key.obj",
+"..\output\LCD1602.obj",
+"..\output\i2c.obj",
+"..\output\eeprom.obj",
+"..\output\Coded_Lock.obj" 
+TO "..\output\Íú²Æ" 
+PRINT("..\listing\Íú²Æ.m51") RAMSIZE(256) 

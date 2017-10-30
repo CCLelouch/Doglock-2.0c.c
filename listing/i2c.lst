@@ -1,0 +1,118 @@
+C51 COMPILER V9.00   I2C                                                                   10/30/2017 21:37:46 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN ..\output\i2c.obj
+COMPILER INVOKED BY: D:\keil\keillc51\keillc51set\C51\BIN\C51.EXE ..\program\i2c.c BROWSE INCDIR(..\program) DEBUG OBJEC
+                    -TEXTEND PRINT(..\listing\i2c.lst) TABS(2) OBJECT(..\output\i2c.obj)
+
+line level    source
+
+   1          /****************************************************************
+   2          /*文件名：I2C.C     //@11.0592MHz
+   3          /*功能：
+   4          /*说明：先传高位，SDA>4.7us,SCL低电平后0.125us后反应应答位，每次一字节结束第九个脉冲，SCL为0，后0.4375us，
+             -E2PROM立即释放总线。有10ms写周期
+   5          /*修改日期：2017-05-29
+   6          /*作者：c.c. 
+   7          /***************************************************************/
+   8          #include "i2c.h"
+   9          
+  10          sbit SCL = P6^4;
+  11          sbit SDA = P6^5;
+  12          
+  13          #if 0
+              void Delay(uint i)
+              {
+                while(i--);
+              }
+              #endif
+  19          
+  20          void I2CStart()
+  21          {
+  22   1        SDA = 1;              //SCL拉高前确保SDA为高
+  23   1      //  Delay(5); //
+  24   1        SCL = 1;
+  25   1        Delay(5);               //SDA高电平>4.7US
+  26   1        SDA = 0; 
+  27   1        Delay(5);               //SDA低电平>4US
+  28   1        SCL = 0;
+  29   1      //  Delay(5); //
+  30   1      }
+  31          
+  32          void I2CStop()
+  33          {
+  34   1        SDA = 0;              //SCL拉高前确保SDA为高
+  35   1      //  Delay(5);//
+  36   1        SCL = 1;
+  37   1        Delay(5);             //SCL高电平>4us
+  38   1        SDA = 1;
+  39   1        Delay(5);             //SDA高电平>4.7US
+  40   1      }
+  41          
+  42          void I2CSend(uchar byte)
+  43          {
+  44   1        unsigned char i,j=50;
+  45   1        for(i=0;i<8;i++)
+  46   1        {
+  47   2          byte<<=1;
+  48   2          SDA = CY;
+  49   2      //    Delay(5);//
+  50   2          SCL = 1;
+  51   2          Delay(5);           //SCL高电平>4us
+  52   2          SCL = 0;
+  53   2      //    Delay(5);//            //等待从机反应应答作用
+C51 COMPILER V9.00   I2C                                                                   10/30/2017 21:37:46 PAGE 2   
+
+  54   2        }
+  55   1        SDA = 1;              //释放总线等待从机应答位
+  56   1        Delay(5);//          //为了明显看到应答位 //
+  57   1        SCL = 1;
+  58   1        while(SDA&&i--) j=50;      //等待从机应答 ，延时跳过
+  59   1        Delay(2);          //为了明显看到应答位，标准i2c通讯应答非应答scl保持>4us//
+  60   1        SCL = 0;
+  61   1        SDA = 0;           //发送完释放占领总线，要读再来释放总线
+  62   1        Delay(5);//          //为了明显看到应答位 //
+  63   1      
+  64   1      }
+  65          
+  66          uchar I2CRead(bit ACK_Y_N) //应答0,非应答1
+  67          {
+  68   1         uchar byte = 0,i=0;
+  69   1         for(i=0;i<8;i++)
+  70   1         {
+  71   2          SDA = 1;  //释放总线准备读取
+  72   2          Delay(1);   //时钟最大100-400khz//
+  73   2          SCL = 1;
+  74   2          byte<<=1;
+  75   2          if(SDA) byte |= SDA;
+  76   2          Delay(1);   //时钟最大100-400khz，标准i2c通讯应答非应答scl保持>4us //
+  77   2          SCL = 0;
+  78   2          Delay(1);   //时钟最大100-400khz//
+  79   2         }
+  80   1        if(ACK_Y_N)
+  81   1          SDA = 1;
+  82   1        else 
+  83   1          SDA = 0;       
+  84   1        SCL = 1;
+  85   1        Delay(5);   //等待从机检测应答位标准i2c通讯应答非应答scl保持>4us//
+  86   1        SCL = 0;
+  87   1      //  Delay(5);//
+  88   1        
+  89   1        return byte;
+  90   1      }
+  91          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    204    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

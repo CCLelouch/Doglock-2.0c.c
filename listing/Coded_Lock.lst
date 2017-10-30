@@ -1,0 +1,216 @@
+C51 COMPILER V9.00   CODED_LOCK                                                            10/30/2017 21:37:46 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE CODED_LOCK
+OBJECT MODULE PLACED IN ..\output\Coded_Lock.obj
+COMPILER INVOKED BY: D:\keil\keillc51\keillc51set\C51\BIN\C51.EXE ..\program\Coded_Lock.c BROWSE INCDIR(..\program) DEBU
+                    -G OBJECTEXTEND PRINT(..\listing\Coded_Lock.lst) TABS(2) OBJECT(..\output\Coded_Lock.obj)
+
+line level    source
+
+   1          /****************************************************************
+   2          /*文件名：coded_lock.C      //@11.0592MHz
+   3          /*功能：  实现简单密码锁
+   4          /*说明：  看配套流程图
+   5          /*修改日期：2017-07-20
+   6          /*版本：旺财1.0
+   7          /*作者：c.c. 
+   8          /***************************************************************/
+   9          
+  10          #include "coded_lock.h"
+  11          #include"LCD1602.H"
+  12          #include"Delay.H"
+  13          #include "eeprom.h" 
+  14          #include "i2c.h"
+  15          #include"key.h"
+  16          
+  17          
+  18          PWS_Buf[7]={0,0,0,0,0,0,0};        /*修改后的密码值，或记忆模块传进来的密码值*/
+  19          Txt_Buf[12]={0,0,0,0,0,0,0,0,0,0,0,0}; /*用户输入键值*/
+  20          uchar alarm=0;
+  21          
+  22          /****************************************************************
+  23          **函数：void Gain_E2PROM_PWS()      
+  24          **功能：获取记忆模块内密码数据
+  25          **说明： 
+  26          **修改日期：2017-07-20
+  27          **作者：c.c. 
+  28          ****************************************************************/
+  29          void Gain_E2PROM_PWS()
+  30          {
+  31   1        I2C_init_ADDR(0x02);             
+  32   1        I2CStart();              
+  33   1        I2CSend(0xa1);  //控制字地址000，读          
+  34   1        PWS_Buf[0]=I2CRead(0);  //应答      /*我不知道为什么读的值都为两倍*/   
+  35   1        PWS_Buf[1]=I2CRead(0);  //应答           
+  36   1        PWS_Buf[2]=I2CRead(0);  //应答
+  37   1        PWS_Buf[3]=I2CRead(0);  //应答
+  38   1        PWS_Buf[4]=I2CRead(0);  //应答
+  39   1        PWS_Buf[5]=I2CRead(0);  //应答         
+  40   1        PWS_Buf[6]=I2CRead(1);  //非应答         
+  41   1        I2CStop();
+  42   1        if(  PWS_Buf[6]==PWS_Buf[0]*8+6 )
+  43   1          LCD1602_State=inppsw;      //有密码
+  44   1        else
+  45   1          LCD1602_State=newpsw;      //无密码
+  46   1      }
+  47          /****************************************************************
+  48          **函数：char Send_E2PROM_PWS()      
+  49          **功能：发送密码到记忆模块
+  50          **说明： 
+  51          **修改日期：2017-07-20
+  52          **作者：c.c. 
+  53          ****************************************************************/
+  54          char Send_E2PROM_PWS()
+C51 COMPILER V9.00   CODED_LOCK                                                            10/30/2017 21:37:46 PAGE 2   
+
+  55          {                          
+  56   1        PWS_Buf[0]=Txt_Buf[0];           
+  57   1        PWS_Buf[1]=Txt_Buf[1];  
+  58   1        PWS_Buf[2]=Txt_Buf[2]; 
+  59   1        PWS_Buf[3]=Txt_Buf[3];  
+  60   1        PWS_Buf[4]=Txt_Buf[4];         
+  61   1        PWS_Buf[5]=Txt_Buf[5];
+  62   1        PWS_Buf[6]=Txt_Buf[0]*8+6; //对密码末位进行加密，计算可用于判别是否为密码   
+  63   1      
+  64   1        I2C_init_ADDR(0x02);              
+  65   1        I2CSend(PWS_Buf[0]);              
+  66   1        I2CSend(PWS_Buf[1]);  //第一位密码            
+  67   1        I2CSend(PWS_Buf[2]);              
+  68   1        I2CSend(PWS_Buf[3]);
+  69   1        I2CSend(PWS_Buf[4]);
+  70   1        I2CSend(PWS_Buf[5]);
+  71   1        I2CSend(PWS_Buf[6]);              
+  72   1        I2CStop();
+  73   1        Delay(10);
+  74   1        return 1;       //修改成功
+  75   1      }
+  76          /****************************************************************
+  77          **函数：void Password_Set()     
+  78          **功能：密码重置
+  79          **说明： 
+  80          **修改日期：2017-07-20
+  81          **作者：c.c. 
+  82          ****************************************************************/
+  83          void Password_Set()  //此函数用于用户输入密码，和比对设置的密码
+  84          {
+  85   1        if(LCD1602_State==newpsw)       //用户输入第一次密码
+  86   1        {
+  87   2          while(!KEY16_Flag());     //等待按键按下
+  88   2          Txt_Buf[0]=KEY16_scan();
+  89   2          while(!KEY16_Flag());
+  90   2          Txt_Buf[1]=KEY16_scan();
+  91   2          while(!KEY16_Flag());
+  92   2          Txt_Buf[2]=KEY16_scan();
+  93   2          while(!KEY16_Flag());
+  94   2          Txt_Buf[3]=KEY16_scan();
+  95   2          while(!KEY16_Flag());
+  96   2          Txt_Buf[4]=KEY16_scan();
+  97   2          while(!KEY16_Flag());
+  98   2          Txt_Buf[5]=KEY16_scan();
+  99   2          LCD1602_State=setagain;
+ 100   2        }
+ 101   1        else if(LCD1602_State==setagain)      //用户请再输入密码
+ 102   1        {
+ 103   2          while(!KEY16_Flag());
+ 104   2          Txt_Buf[6]=KEY16_scan();
+ 105   2          while(!KEY16_Flag());
+ 106   2          Txt_Buf[7]=KEY16_scan();
+ 107   2          while(!KEY16_Flag());
+ 108   2          Txt_Buf[8]=KEY16_scan();
+ 109   2          while(!KEY16_Flag());
+ 110   2          Txt_Buf[9]=KEY16_scan();
+ 111   2          while(!KEY16_Flag());
+ 112   2          Txt_Buf[10]=KEY16_scan();
+ 113   2          while(!KEY16_Flag());
+ 114   2          Txt_Buf[11]=KEY16_scan();
+ 115   2          if(Txt_Buf[0]==Txt_Buf[6]&&Txt_Buf[1]==Txt_Buf[7]&&Txt_Buf[2]==Txt_Buf[8]&&
+ 116   2             Txt_Buf[3]==Txt_Buf[9]&&Txt_Buf[4]==Txt_Buf[10]&&Txt_Buf[5]==Txt_Buf[11])              //比对两次密码
+C51 COMPILER V9.00   CODED_LOCK                                                            10/30/2017 21:37:46 PAGE 3   
+
+ 117   2          {
+ 118   3            LCD1602_State=ok;       //两次密码一样，ok
+ 119   3            Send_E2PROM_PWS();        //发送密码到
+ 120   3            P55=0;Delay_ms(80);P55=1;Delay_ms(80); P55=0;Delay_ms(80);P55=1;
+ 121   3          }
+ 122   2          else
+ 123   2            LCD1602_State=newpsw;      //两次密码不一样，请输入密码
+ 124   2        }
+ 125   1      }
+ 126          /****************************************************************
+ 127          **函数：char Password_checked()     
+ 128          **功能：配对密码
+ 129          **说明： 
+ 130          **修改日期：2017-07-20
+ 131          **作者：c.c. 
+ 132          ****************************************************************/
+ 133          char Password_checked()
+ 134          {
+ 135   1        while(!KEY16_Flag());     //等待按键按下
+ 136   1        Txt_Buf[0]=KEY16_scan();    //获取键值
+ 137   1        while(!KEY16_Flag());
+ 138   1        Txt_Buf[1]=KEY16_scan();
+ 139   1        while(!KEY16_Flag());
+ 140   1        Txt_Buf[2]=KEY16_scan();
+ 141   1        while(!KEY16_Flag());
+ 142   1        Txt_Buf[3]=KEY16_scan();
+ 143   1        while(!KEY16_Flag());
+ 144   1        Txt_Buf[4]=KEY16_scan();
+ 145   1        while(!KEY16_Flag());
+ 146   1        Txt_Buf[5]=KEY16_scan();
+ 147   1      
+ 148   1        if(Txt_Buf[0]==PWS_Buf[0]&&
+ 149   1           Txt_Buf[1]==PWS_Buf[1]&&
+ 150   1           Txt_Buf[2]==PWS_Buf[2]&&
+ 151   1           Txt_Buf[3]==PWS_Buf[3]&&
+ 152   1           Txt_Buf[4]==PWS_Buf[4]&&
+ 153   1           Txt_Buf[5]==PWS_Buf[5])              //配对密码
+ 154   1        {
+ 155   2          LCD1602_State=succ;       //密码一样，ok
+ 156   2          alarm=0;            //有一次正确就清空累计错误次数
+ 157   2        }
+ 158   1        else 
+ 159   1        {
+ 160   2          LCD1602_State=inppsw;      //密码错误，请输入密码
+ 161   2          alarm++;           //累计错误次数
+ 162   2        }
+ 163   1        if(alarm>=5)
+ 164   1        {
+ 165   2          LCD1602_State=error;
+ 166   2          alarm=0;
+ 167   2        }
+ 168   1        P4=alarm;
+ 169   1        return 0;
+ 170   1      }
+ 171          
+ 172          
+ 173          
+ 174          
+ 175          
+ 176          
+ 177          
+ 178          
+C51 COMPILER V9.00   CODED_LOCK                                                            10/30/2017 21:37:46 PAGE 4   
+
+ 179          
+ 180          
+ 181          
+ 182          
+ 183          
+ 184          
+ 185          
+ 186          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    758    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     39    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

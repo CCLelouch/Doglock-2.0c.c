@@ -1,0 +1,59 @@
+C51 COMPILER V9.00   DELAY                                                                 10/30/2017 21:37:45 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE DELAY
+OBJECT MODULE PLACED IN ..\output\Delay.obj
+COMPILER INVOKED BY: D:\keil\keillc51\keillc51set\C51\BIN\C51.EXE ..\program\Delay.C BROWSE INCDIR(..\program) DEBUG OBJ
+                    -ECTEXTEND PRINT(..\listing\Delay.lst) TABS(2) OBJECT(..\output\Delay.obj)
+
+line level    source
+
+   1          #include"Delay.H"   
+   2          /****************************************************************
+   3          /*函数：void Delay_ms(uint x)     //@11.0592MHz
+   4          /*功能：软件延时毫秒秒函数
+   5          /*说明：当x=1延时1ms、x=2延时2.0ms、x=3延时2.96ms、x=4延时3.96ms，由此可见x=1之后每增加1则延时1ms
+   6          /*修改日期：2016-12-01
+   7          /*作者：华南理工大学广州学院电工电子创新实验室--叶成彬 
+   8          /***************************************************************/
+   9          void Delay_ms(uint x)      //@11.0592MHz
+  10          {
+  11   1        uint i,j;
+  12   1        while( x-- !=0 )
+  13   1        {
+  14   2          for(j=0;j<9;j++)
+  15   2            for(i=0;i<85;i++);   //一个 ; 表示空语句,CPU空转.
+  16   2        }
+  17   1      }
+  18          /****************************************************************
+  19          /*函数：void Dealy us(uint xus)        //@11.0592MHz
+  20          /*功能：软件延时微秒函数
+  21          /*说明：当x=1延时4.64μs、x=2延时6.56μS、x=3延时8.48μS、x=4延时10.4μS，由此可见x=1之后每增加1则延时1.92
+             -μs
+  22          /*修改日期：2016-12-01
+  23          /*作者：华南理工大学广州学院电工电子创新实验室--叶成彬  
+  24          /***************************************************************/
+  25          void Delay(uint x)
+  26          {
+  27   1        while(--x);
+  28   1      }
+  29          
+  30          
+  31          
+  32          
+  33          
+  34          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     54    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

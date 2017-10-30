@@ -1,0 +1,95 @@
+C51 COMPILER V9.00   MAIN                                                                  10/30/2017 21:37:45 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\output\main.obj
+COMPILER INVOKED BY: D:\keil\keillc51\keillc51set\C51\BIN\C51.EXE ..\program\main.c BROWSE INCDIR(..\program) DEBUG OBJE
+                    -CTEXTEND PRINT(..\listing\main.lst) TABS(2) OBJECT(..\output\main.obj)
+
+line level    source
+
+   1          /****************************************************************
+   2          /*文件名：旺财      //@11.0592MHz
+   3          /*功能：  实现简单密码锁
+   4          /*说明：  简单实现1602显示，矩阵按键输入，掉电记忆，密码锁。具体看配套流程图
+   5          /*修改日期：2017-07-20
+   6          /*版本：旺财1.0
+   7          /*作者：c.c. 
+   8          /***************************************************************/
+   9          #include"head.h"
+  10          #include"LCD1602.h"
+  11          #include"Delay.H"
+  12          #include "coded_lock.h"
+  13          #include"key.h"
+  14          
+  15          uchar Txt_PWS[12]={0,0,0,0,0,0, 0,0,0,0,0,0};//存放用户输入键值
+  16          void STC15W_IOinit(void)
+  17          {
+  18   1        P0M1 = 0; P0M0 = 0; 
+  19   1        P1M1 = 0; P1M0 = 0; 
+  20   1        P2M1 = 0; P2M0 = 0;
+  21   1        P3M1 = 0; P3M0 = 0;      
+  22   1        P4M1 = 0; P4M0 = 0; 
+  23   1        P5M1 = 0; P5M0 = 0; 
+  24   1        P6M1 = 0; P6M0 = 0; 
+  25   1        P7M1 = 0; P7M0 = 0; 
+  26   1      }
+  27          
+  28          void main()
+  29          {
+  30   1        STC15W_IOinit();
+  31   1        Init_LCD1602();
+  32   1      
+  33   1        LCD1602_State = 0;         /*开机初始状态*/
+  34   1        Display_LCD1602();         /*开机显示欢迎使用*/
+  35   1        Delay_ms(2000);
+  36   1      
+  37   1        Gain_E2PROM_PWS();         /*开机获取密码*/
+  38   1        while(1)
+  39   1        {
+  40   2          Delay(10);
+  41   2          Display_LCD1602();
+  42   2          Delay_ms(500);
+  43   2          switch (LCD1602_State)
+  44   2          {
+  45   3      /*welcome*/ case welcome: Gain_E2PROM_PWS();break;//开机检测&报警重置
+  46   3      /*Set*/     case newpsw:  Password_Set();break;//设置密码1
+  47   3      /*AGAIN*/   case setagain:  Password_Set();break;//设置密码2
+  48   3      /*OK*/      case ok:    Send_E2PROM_PWS();LCD1602_State=4;break;//发送密码
+  49   3      /*pleaseip*/case inppsw:  Password_checked();break;//配对密码
+  50   3      /*SUCC*/    case succ:    P55=0;Delay_ms(60);P55=1;Delay_ms(60); P55=0;Delay_ms(60);P55=1;Delay_ms(60); P55=0;
+             -Delay_ms(60);P55=1;LCD1602_State=change;break;    //密码正确，SUCC滴滴滴三声
+  51   3                  case error:   P55=0;Delay_ms(3000);P55=1;LCD1602_State=welcome;break;//报警
+  52   3      /*Change?*/ case change:
+  53   3              {
+C51 COMPILER V9.00   MAIN                                                                  10/30/2017 21:37:45 PAGE 2   
+
+  54   4                while(!KEY16_Flag());
+  55   4                if(KEY16_scan()==14)
+  56   4                {
+  57   5                  LCD1602_State=newpsw;
+  58   5                }
+  59   4                while(!KEY16_Flag());
+  60   4                if(KEY16_scan()==15)
+  61   4                {
+  62   5                  LCD1602_State=inppsw;
+  63   5                };break;
+  64   4              }
+  65   3            default:break;
+  66   3          }
+  67   2        }
+  68   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    243    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

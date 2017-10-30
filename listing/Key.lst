@@ -1,0 +1,106 @@
+C51 COMPILER V9.00   KEY                                                                   10/30/2017 21:37:45 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN ..\output\Key.obj
+COMPILER INVOKED BY: D:\keil\keillc51\keillc51set\C51\BIN\C51.EXE ..\program\Key.C BROWSE INCDIR(..\program) DEBUG OBJEC
+                    -TEXTEND PRINT(..\listing\Key.lst) TABS(2) OBJECT(..\output\Key.obj)
+
+line level    source
+
+   1          /*********************************************************************************
+   2          /*文件名：Key.C
+   3          /*功能：4*4按键
+   4          /*说明：
+   5          /*修改日期：2017-06-03
+   6          /*作者：c.c.
+   7          /*********************************************************************************/
+   8          #include"Delay.H"
+   9          #include"key.h"
+  10          
+  11          unsigned char i=0,j=0,k=0,key;
+  12          unsigned char key_scan[]={0x7f,0xbf,0xdf,0xef};
+  13          
+  14          //void delay(uint i)
+  15          //{
+  16          //  while(i--);
+  17          //} 
+  18          /****************************************************************
+  19          /*函数名：KEY16_scan()      
+  20          /*功能：按一下只读取一个键值，
+  21          /*说明：按键按下后，释放才返回键值
+  22          /*修改日期：2017-06-03
+  23          /*作者：c.c. 
+  24          /***************************************************************/
+  25          char KEY16_scan()
+  26          {
+  27   1        uchar kcount=100;
+  28   1        for(i=0;i<4;i++)
+  29   1        {
+  30   2          P7 = key_scan[i];
+  31   2          if(P7!=key_scan[i])
+  32   2          {
+  33   3            Delay(5000);
+  34   3            if(P7!=key_scan[i])
+  35   3            {
+  36   4              k = P7;
+  37   4              for(j=0;j<4;j++)
+  38   4              {
+  39   5                if(!(k & 0x01))
+  40   5                {
+  41   6                  while(1)    //用户放键再发送键值
+  42   6                  {
+  43   7                    if(P7==key_scan[i])
+  44   7                    {
+  45   8                      Delay(10000);//10ms 消抖
+  46   8                      if(P7==key_scan[i])
+  47   8                      {
+  48   9                        return (j*4+i);
+  49   9                      }
+  50   8                    }
+  51   7                  }
+  52   6                }
+  53   5                k>>=1;
+  54   5              }
+C51 COMPILER V9.00   KEY                                                                   10/30/2017 21:37:45 PAGE 2   
+
+  55   4            }
+  56   3          }   
+  57   2        }
+  58   1        return -1;
+  59   1      }
+  60          
+  61          /****************************************************************
+  62          /*函数名：KEY16_Flag()      
+  63          /*功能：按键标志
+  64          /*说明：
+  65          /*修改日期：2017-06-03
+  66          /*作者：c.c. 
+  67          /***************************************************************/
+  68          
+  69          uchar KEY16_Flag()
+  70          {
+  71   1        for(i=0;i<4;i++)
+  72   1        {
+  73   2          P7 = key_scan[i];
+  74   2          if(P7!=key_scan[i])
+  75   2          {
+  76   3            return 1;
+  77   3          }
+  78   2        }
+  79   1        return 0;
+  80   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    136    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

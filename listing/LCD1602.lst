@@ -1,0 +1,281 @@
+C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LCD1602
+OBJECT MODULE PLACED IN ..\output\LCD1602.obj
+COMPILER INVOKED BY: D:\keil\keillc51\keillc51set\C51\BIN\C51.EXE ..\program\LCD1602.c BROWSE INCDIR(..\program) DEBUG O
+                    -BJECTEXTEND PRINT(..\listing\LCD1602.lst) TABS(2) OBJECT(..\output\LCD1602.obj)
+
+line level    source
+
+   1          /***********************************************************************
+   2          ** 文件名：LCD1602.c
+   3          ** 功能：  LCD1602驱动程序
+   4          ** 说明：C:LCD1602长数字输入变量
+   5          ** 基本指令：
+   6          ** 修改日期：2017-07-19
+   7          ** 版本：V2.1
+   8          ** 修改：修复了超过浮点型整数部分超过255无法正常显示问题
+   9               完善了浮点型到整数的转换显示,完善了端口配置
+  10          ** 作者：c.c. 
+  11          ************************************************************************/
+  12          
+  13          #include"head.h"
+  14          #include"Delay.H"
+  15          #include"LCD1602.H"
+  16          
+  17          extern bit flag;        //分情况显示位
+  18          extern float C;         //输入要显示的浮点型数值
+  19          
+  20          State LCD1602_State;//不同状态标志位
+  21          
+  22          unsigned char  FirstLine[16]="                ",SecondLine[16] ="                ";
+  23          //定义空间，显示为空，在字符再后加一个'\0'  这两数组用来单独赋值其中的一个字节空间
+  24          
+  25          /****************************************************************
+  26          **函数：void wait()     
+  27          **功能：忙检测
+  28          **说明： BUSY(D7)为忙检测口
+  29          **修改日期：2017-07-07
+  30          **作者：c.c. 
+  31          ****************************************************************/
+  32          void wait()         
+  33          {
+  34   1        DAT_PIN = 0XFF;         //并行口初始化
+  35   1        do
+  36   1        {
+  37   2          EN = 0;
+  38   2          RS = 0;
+  39   2          RW = 1;             //读端口
+  40   2          EN = 1;             //高脉冲发送
+  41   2        }
+  42   1        while(BUSY);         
+  43   1        EN = 0;
+  44   1      }
+  45          
+  46          void write_cmd(unsigned char cmd)  //写指令
+  47          {
+  48   1         wait();            //每次写读指令数据前都要检测忙信号
+  49   1         EN = 0;
+  50   1         RS = 0;
+  51   1         RW = 0;
+  52   1         DAT_PIN = cmd;
+  53   1         EN = 1;
+  54   1         EN = 0; 
+C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 2   
+
+  55   1      }
+  56          
+  57          
+  58          void write_dat(unsigned char dat)  //写数据
+  59          {
+  60   1        wait();
+  61   1        EN = 0;
+  62   1        RS = 1;
+  63   1        RW = 0;
+  64   1        DAT_PIN = dat;
+  65   1        EN = 1;
+  66   1        EN = 0;
+  67   1      }
+  68          
+  69          void write_char(unsigned char addr,unsigned char cha) //地址(0-27H,40H-67H)，数据
+  70          {
+  71   1        if(addr<0x10)
+  72   1          write_cmd(0x80+addr);     //第一行 地址(0X80+0-27H,40H-67H，第一行第一个为0x80，第二行第一个为0xc0)
+  73   1        else               
+  74   1          write_cmd(0xc0+addr);     //第二行
+  75   1        write_cmd(0x80+addr);
+  76   1        write_dat(cha);
+  77   1      }
+  78          
+  79          void write_string(unsigned char addr,unsigned char *p)  //地址(0-27H,40H-67H)，数据
+  80          {
+  81   1        if(addr<0x10)
+  82   1          write_cmd(0x80+addr);     //第一行
+  83   1        else               
+  84   1          write_cmd(0xb0+addr);     //第二行
+  85   1        while(*p!='\0')           //检测字符串后面的'\0'
+  86   1        {
+  87   2          write_dat(*p++);    
+  88   2        }
+  89   1      }
+  90          /****************************************************************
+  91          **函数：Init_LCD1602()      
+  92          **功能：初始化
+  93          **说明： 
+  94          **修改日期：2017-07-08
+  95          **作者：c.c. 
+  96          ****************************************************************/
+  97          void Init_LCD1602()
+  98          {
+  99   1        Delay_ms(15);
+ 100   1        write_cmd(0x38);  //显示模式设置
+ 101   1        write_cmd(0x38);  //显示模式设置
+ 102   1        write_cmd(0x38);  //显示模式设置
+ 103   1        write_cmd(0x06);  //开显示无光标
+ 104   1        write_cmd(0x0c);  //显示清屏：数据指针清零，所有显示清零
+ 105   1        write_cmd(0x01);  //显示光标移动设置
+ 106   1      }
+ 107          /****************************************************************
+ 108          **函数：Init_LCD1602()      
+ 109          **功能：初始化
+ 110          **说明： 
+ 111          **修改日期：2017-07-08
+ 112          **作者：c.c. 
+ 113          ****************************************************************/
+ 114          void Display_LCD1602()
+ 115          {
+ 116   1      //  uchar i,j,k,l,m;        //用于显示浮点型数字
+C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 3   
+
+ 117   1      #if 0/**********遍历数组*************/
+                FirstLine[0]='D';~  FirstLine[16]=' ';
+              /*******************************/
+              #elif 0/*************浮点型数字显示算法***************/   
+                  /******整数部分******/
+                  i=(unsigned int)C/100;
+                  j=(unsigned int)C%100/10;
+                  k=(unsigned int)C%10;
+                  /******小数部分******/  
+                  l=(unsigned int)(C*10)%10;
+                  m=(unsigned int)(C*100)%10;
+              /**********************************************/
+              #elif 0
+                  FirstLine[0]='D';
+                  FirstLine[1]='i';
+                  FirstLine[2]='s';
+                  FirstLine[3]='t';
+                  FirstLine[4]='a';
+                  FirstLine[5]='n';
+                  FirstLine[6]='c';
+                  FirstLine[7]='e';
+                  FirstLine[8]=':'; 
+                  FirstLine[9] ='0'+i;
+                  FirstLine[10]='0'+j;
+                  FirstLine[11]='0'+k;
+                  FirstLine[12]='.';
+                  FirstLine[13]='0'+l;
+                  FirstLine[14]='0'+m;
+              #elif 1
+ 146   1        Init_LCD1602();
+ 147   1        Delay(10);
+ 148   1        switch (LCD1602_State)
+ 149   1        {
+ 150   2          case welcome: 
+ 151   2            {
+ 152   3              FirstLine[0]='W';FirstLine[1]='e';FirstLine[2]='l'; FirstLine[3]='c'; FirstLine[4]='o'; FirstLine[5]='
+             -m'; FirstLine[6]='e'; FirstLine[7]=' ';        /* Welcome */
+ 153   3              FirstLine[8]=' ';FirstLine[9]=' ';FirstLine[10]=' ';FirstLine[11]=' ';FirstLine[12]=' ';FirstLine[13]=
+             -' ';FirstLine[14]=' ';FirstLine[15]=' ';break;
+ 154   3            }
+ 155   2      
+ 156   2          case newpsw:
+ 157   2            {
+ 158   3              FirstLine[0]='P';FirstLine[1]='l';FirstLine[2]='e'; FirstLine[3]='a'; FirstLine[4]='s'; FirstLine[5]='
+             -e'; FirstLine[6]=' '; FirstLine[7]='S';          /* Please  */
+ 159   3              FirstLine[8]='e';FirstLine[9]='t';FirstLine[10]=' ';FirstLine[11]='N';FirstLine[12]='e';FirstLine[13]=
+             -'w';FirstLine[14]=' ';FirstLine[15]=' ';       /* Set New */
+ 160   3              SecondLine[0]='P';SecondLine[1]='a';SecondLine[2]='s'; SecondLine[3]='s'; SecondLine[4]='w'; SecondLin
+             -e[5]='o'; SecondLine[6]='r'; SecondLine[7]='d';    /*Password */
+ 161   3              SecondLine[8]=' ';SecondLine[9]=' ';SecondLine[10]=' ';SecondLine[11]=' ';SecondLine[12]=' ';SecondLin
+             -e[13]=' ';SecondLine[14]=' ';SecondLine[15]=' ';break;
+ 162   3            }
+ 163   2                
+ 164   2          case setagain:
+ 165   2            {
+ 166   3              FirstLine[0]='P';FirstLine[1]='l';FirstLine[2]='e'; FirstLine[3]='a'; FirstLine[4]='s'; FirstLine[5]='
+             -e'; FirstLine[6]=' '; FirstLine[7]='S';          /* Please    */
+ 167   3              FirstLine[8]='e';FirstLine[9]='t';FirstLine[10]=' ';FirstLine[11]='A';FirstLine[12]='g';FirstLine[13]=
+             -'a';FirstLine[14]='i';FirstLine[15]='n';       /* Set Again */
+ 168   3              SecondLine[0]=' ';SecondLine[1]=' ';SecondLine[2]=' '; SecondLine[3]=' '; SecondLine[4]=' '; SecondLin
+             -e[5]=' '; SecondLine[6]=' '; SecondLine[7]=' ';    /*           */
+ 169   3              SecondLine[8]=' ';SecondLine[9]=' ';SecondLine[10]=' ';SecondLine[11]=' ';SecondLine[12]=' ';SecondLin
+C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 4   
+
+             -e[13]=' ';SecondLine[14]=' ';SecondLine[15]=' ';break;
+ 170   3            }
+ 171   2      
+ 172   2          case ok:  
+ 173   2            {
+ 174   3              FirstLine[0]='O';FirstLine[1]='K';FirstLine[2]='!'; FirstLine[3]=' '; FirstLine[4]=' '; FirstLine[5]='
+             - '; FirstLine[6]=' '; FirstLine[7]=' ';        /*    ok    */
+ 175   3              FirstLine[8]=' ';FirstLine[9]=' ';FirstLine[10]=' ';FirstLine[11]=' ';FirstLine[12]=' ';FirstLine[13]=
+             -' ';FirstLine[14]=' ';FirstLine[15]=' ';break;
+ 176   3            }
+ 177   2      
+ 178   2          case inppsw:  
+ 179   2            {
+ 180   3              FirstLine[0]='P';FirstLine[1]='l';FirstLine[2]='e'; FirstLine[3]='a'; FirstLine[4]='s'; FirstLine[5]='
+             -e'; FirstLine[6]=' '; FirstLine[7]='I';          /* Please  */
+ 181   3              FirstLine[8]='n';FirstLine[9]='p';FirstLine[10]='u';FirstLine[11]='t';FirstLine[12]=' ';FirstLine[13]=
+             -' ';FirstLine[14]=' ';FirstLine[15]=' ';       /* Input   */
+ 182   3              SecondLine[0]='P';SecondLine[1]='a';SecondLine[2]='s'; SecondLine[3]='s'; SecondLine[4]='w'; SecondLin
+             -e[5]='o'; SecondLine[6]='r'; SecondLine[7]='d';    /*Password */
+ 183   3              SecondLine[8]=' ';SecondLine[9]=' ';SecondLine[10]=' ';SecondLine[11]=' ';SecondLine[12]=' ';SecondLin
+             -e[13]=' ';SecondLine[14]=' ';SecondLine[15]=' ';break;
+ 184   3            }
+ 185   2      
+ 186   2          case succ: 
+ 187   2            {
+ 188   3              FirstLine[0]='S';FirstLine[1]='U';FirstLine[2]='C'; FirstLine[3]='C'; FirstLine[4]=' '; FirstLine[5]='
+             - '; FirstLine[6]=' '; FirstLine[7]=' ';        /*SUCC */
+ 189   3              FirstLine[8]=' ';FirstLine[9]=' ';FirstLine[10]=' ';FirstLine[11]=' ';FirstLine[12]=' ';FirstLine[13]=
+             -' ';FirstLine[14]=' ';FirstLine[15]=' ';
+ 190   3              SecondLine[0]=' ';SecondLine[1]=' ';SecondLine[2]=' '; SecondLine[3]=' '; SecondLine[4]=' '; SecondLin
+             -e[5]=' '; SecondLine[6]=' '; SecondLine[7]=' ';    /*           */
+ 191   3              SecondLine[8]=' ';SecondLine[9]=' ';SecondLine[10]=' ';SecondLine[11]=' ';SecondLine[12]=' ';SecondLin
+             -e[13]=' ';SecondLine[14]=' ';SecondLine[15]=' ';break;
+ 192   3            }
+ 193   2          case change:
+ 194   2            {
+ 195   3              FirstLine[0]='S';FirstLine[1]='e';FirstLine[2]='t'; FirstLine[3]=' '; FirstLine[4]='N'; FirstLine[5]='
+             -e'; FirstLine[6]='w'; FirstLine[7]=' ';          /* Set New  */
+ 196   3              FirstLine[8]='P';FirstLine[9]='a';FirstLine[10]='s';FirstLine[11]='s';FirstLine[12]='w';FirstLine[13]=
+             -'o';FirstLine[14]='r';FirstLine[15]='d';       /*Password  */
+ 197   3              SecondLine[0]='?';SecondLine[1]='?';SecondLine[2]=' '; SecondLine[3]=' '; SecondLine[4]=' '; SecondLin
+             -e[5]=' '; SecondLine[6]=' '; SecondLine[7]=' ';    /*   ?  */
+ 198   3              SecondLine[8]=' ';SecondLine[9]=' ';SecondLine[10]=' ';SecondLine[11]=' ';SecondLine[12]=' ';SecondLin
+             -e[13]=' ';SecondLine[14]=' ';SecondLine[15]=' ';break;
+ 199   3            }
+ 200   2          default:break;
+ 201   2        }
+ 202   1        
+ 203   1        write_string(0,FirstLine);
+ 204   1        write_string(16,SecondLine);
+ 205   1      #endif  
+ 206   1      }
+ 207          
+ 208          /*****************************指令码/高电平为开*******************
+ 209          ****B7    B6    B5    B4    |B3   B2    B1    B0              ****
+ 210          ****0     0     0     0     |1    D     C     B               ****
+ 211          ****0     0     0     0     |1    开显示  开光标  光标闪烁    ****
+ 212          /*****************************指令码/高电平为开*******************
+ 213          ****B7    B6    B5    B4    |B3   B2    B1    B0              ****
+ 214          ****0     0     0     0     |0    1     N     S               ****
+ 215          ****0     0     0     0     |0    1     X     X               ****
+ 216          ****N=1：读或写地址指针，光标加一
+C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 5   
+
+ 217              N=0:（减一)
+ 218          ****S=1：写一个字符，整屏显示左移（N=1）,右移（N=0）
+ 219              S=0:当写一个字符，整屏显示不移动
+ 220          ******************************************************************/
+ 221          
+ 222          /***********************指令表************************************
+ 223          **0X01------------显示清屏：数据指针清零，所有显示清零
+ 224          **0X02------------显示回车；数据指针清零
+ 225          ******************************************************************/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    657    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     33       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
