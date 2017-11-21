@@ -113,38 +113,38 @@ void Init_LCD1602()
 ****************************************************************/
 void Display_LCD1602()
 {
-//	uchar i,j,k,l,m;			  //用于显示浮点型数字
-#if 0/**********遍历数组*************/
-	FirstLine[0]='D';~	FirstLine[16]=' ';
-/*******************************/
-#elif 0/*************浮点型数字显示算法***************/		
-		/******整数部分******/
-		i=(unsigned int)C/100;
-		j=(unsigned int)C%100/10;
-		k=(unsigned int)C%10;
-		/******小数部分******/	
-		l=(unsigned int)(C*10)%10;
-		m=(unsigned int)(C*100)%10;
-/**********************************************/
-#elif 0
-		FirstLine[0]='D';
-		FirstLine[1]='i';
-		FirstLine[2]='s';
-		FirstLine[3]='t';
-		FirstLine[4]='a';
-		FirstLine[5]='n';
-		FirstLine[6]='c';
-		FirstLine[7]='e';
-		FirstLine[8]=':';	
-		FirstLine[9] ='0'+i;
-		FirstLine[10]='0'+j;
-		FirstLine[11]='0'+k;
-		FirstLine[12]='.';
-		FirstLine[13]='0'+l;
-		FirstLine[14]='0'+m;
-#elif 1
-	Init_LCD1602();
-	Delay(10);
+	//	uchar i,j,k,l,m;			  //用于显示浮点型数字
+	#if 0/**********遍历数组*************/
+		FirstLine[0]='D';~	FirstLine[16]=' ';
+	/*******************************/
+	#elif 0/*************浮点型数字显示算法***************/		
+			/******整数部分******/
+			i=(unsigned int)C/100;
+			j=(unsigned int)C%100/10;
+			k=(unsigned int)C%10;
+			/******小数部分******/	
+			l=(unsigned int)(C*10)%10;
+			m=(unsigned int)(C*100)%10;
+	/**********************************************/
+	#elif 0
+			FirstLine[0]='D';
+			FirstLine[1]='i';
+			FirstLine[2]='s';
+			FirstLine[3]='t';
+			FirstLine[4]='a';
+			FirstLine[5]='n';
+			FirstLine[6]='c';
+			FirstLine[7]='e';
+			FirstLine[8]=':';	
+			FirstLine[9] ='0'+i;
+			FirstLine[10]='0'+j;
+			FirstLine[11]='0'+k;
+			FirstLine[12]='.';
+			FirstLine[13]='0'+l;
+			FirstLine[14]='0'+m;
+	#elif 1
+		Init_LCD1602();
+		Delay(10);
 	switch (LCD1602_State)
 	{
 	 	case welcome:	

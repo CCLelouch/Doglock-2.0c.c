@@ -1,4 +1,4 @@
-C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 1   
+C51 COMPILER V9.00   LCD1602                                                               11/04/2017 08:43:07 PAGE 1   
 
 
 C51 COMPILER V9.00, COMPILATION OF MODULE LCD1602
@@ -62,7 +62,7 @@ line level    source
   52   1         DAT_PIN = cmd;
   53   1         EN = 1;
   54   1         EN = 0; 
-C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 2   
+C51 COMPILER V9.00   LCD1602                                                               11/04/2017 08:43:07 PAGE 2   
 
   55   1      }
   56          
@@ -125,40 +125,40 @@ line level    source
  113          ****************************************************************/
  114          void Display_LCD1602()
  115          {
- 116   1      //  uchar i,j,k,l,m;        //用于显示浮点型数字
-C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 3   
+ 116   1        //  uchar i,j,k,l,m;        //用于显示浮点型数字
+C51 COMPILER V9.00   LCD1602                                                               11/04/2017 08:43:07 PAGE 3   
 
- 117   1      #if 0/**********遍历数组*************/
-                FirstLine[0]='D';~  FirstLine[16]=' ';
-              /*******************************/
-              #elif 0/*************浮点型数字显示算法***************/   
-                  /******整数部分******/
-                  i=(unsigned int)C/100;
-                  j=(unsigned int)C%100/10;
-                  k=(unsigned int)C%10;
-                  /******小数部分******/  
-                  l=(unsigned int)(C*10)%10;
-                  m=(unsigned int)(C*100)%10;
-              /**********************************************/
-              #elif 0
-                  FirstLine[0]='D';
-                  FirstLine[1]='i';
-                  FirstLine[2]='s';
-                  FirstLine[3]='t';
-                  FirstLine[4]='a';
-                  FirstLine[5]='n';
-                  FirstLine[6]='c';
-                  FirstLine[7]='e';
-                  FirstLine[8]=':'; 
-                  FirstLine[9] ='0'+i;
-                  FirstLine[10]='0'+j;
-                  FirstLine[11]='0'+k;
-                  FirstLine[12]='.';
-                  FirstLine[13]='0'+l;
-                  FirstLine[14]='0'+m;
-              #elif 1
- 146   1        Init_LCD1602();
- 147   1        Delay(10);
+ 117   1        #if 0/**********遍历数组*************/
+                  FirstLine[0]='D';~  FirstLine[16]=' ';
+                /*******************************/
+                #elif 0/*************浮点型数字显示算法***************/   
+                    /******整数部分******/
+                    i=(unsigned int)C/100;
+                    j=(unsigned int)C%100/10;
+                    k=(unsigned int)C%10;
+                    /******小数部分******/  
+                    l=(unsigned int)(C*10)%10;
+                    m=(unsigned int)(C*100)%10;
+                /**********************************************/
+                #elif 0
+                    FirstLine[0]='D';
+                    FirstLine[1]='i';
+                    FirstLine[2]='s';
+                    FirstLine[3]='t';
+                    FirstLine[4]='a';
+                    FirstLine[5]='n';
+                    FirstLine[6]='c';
+                    FirstLine[7]='e';
+                    FirstLine[8]=':'; 
+                    FirstLine[9] ='0'+i;
+                    FirstLine[10]='0'+j;
+                    FirstLine[11]='0'+k;
+                    FirstLine[12]='.';
+                    FirstLine[13]='0'+l;
+                    FirstLine[14]='0'+m;
+                #elif 1
+ 146   1          Init_LCD1602();
+ 147   1          Delay(10);
  148   1        switch (LCD1602_State)
  149   1        {
  150   2          case welcome: 
@@ -190,7 +190,7 @@ line level    source
  168   3              SecondLine[0]=' ';SecondLine[1]=' ';SecondLine[2]=' '; SecondLine[3]=' '; SecondLine[4]=' '; SecondLin
              -e[5]=' '; SecondLine[6]=' '; SecondLine[7]=' ';    /*           */
  169   3              SecondLine[8]=' ';SecondLine[9]=' ';SecondLine[10]=' ';SecondLine[11]=' ';SecondLine[12]=' ';SecondLin
-C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 4   
+C51 COMPILER V9.00   LCD1602                                                               11/04/2017 08:43:07 PAGE 4   
 
              -e[13]=' ';SecondLine[14]=' ';SecondLine[15]=' ';break;
  170   3            }
@@ -254,7 +254,7 @@ line level    source
  214          ****0     0     0     0     |0    1     N     S               ****
  215          ****0     0     0     0     |0    1     X     X               ****
  216          ****N=1：读或写地址指针，光标加一
-C51 COMPILER V9.00   LCD1602                                                               10/30/2017 21:37:45 PAGE 5   
+C51 COMPILER V9.00   LCD1602                                                               11/04/2017 08:43:07 PAGE 5   
 
  217              N=0:（减一)
  218          ****S=1：写一个字符，整屏显示左移（N=1）,右移（N=0）

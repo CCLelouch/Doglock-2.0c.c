@@ -42,7 +42,7 @@ char KEY16_scan()
 						{
 							if(P7==key_scan[i])
 							{
-								Delay(10000);//10ms	Ïû¶¶
+								Delay(1000);//10ms	Ïû¶¶
 								if(P7==key_scan[i])
 								{
 									return (j*4+i);
